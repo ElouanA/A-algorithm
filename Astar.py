@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 import heapq 
 
 
@@ -55,11 +55,46 @@ def astar(array, start, goal):
                 
     return False
 
-#Exemple d'utiliser  
+#Exemple d'utilisation
+    
 #Dessiner un labyrinthe sur paint (bordures en noir, fond en blanc) et l'algorithme trouvera le meilleur chemin entre start et end, s'il existe
     
 from matplotlib import pyplot as plt
-img=plt.imread("maze.jpg")
+img=plt.imread('maze.jpg')
+plt.imshow(img)
+
+
+def findStartEnd(img): 
+    indiceMaxRed=(0,0)
+    indiceMaxGreen=(0,0)
+    for i in range (0,len(img)):
+        for j in range (0,len(img[0])): 
+            if [img[i,j][0],img[i,j][1],img[i,j][2]]!=[0,0,0]:
+                if img[i,j,0]/(sum(img[i,j])+0.00001)>img[indiceMaxRed[0],indiceMaxRed[1]][0]/sum(img[indiceMaxRed[0],indiceMaxRed[1]]+0.00001):
+                    indiceMaxRed=(i,j)
+                if img[i,j,1]/(sum(img[i,j])+0.0001)>img[indiceMaxGreen[0],indiceMaxGreen[1]][1]/sum(img[indiceMaxGreen[0],indiceMaxGreen[1]]+0.00001):
+                    indiceMaxGreen=(i,j)
+    return(indiceMaxGreen,indiceMaxRed) 
+
+def removeRedGreenPatches(img, start, end): 
+    newimage=[]
+    greenpixel=img[start[0],start[1]]
+    redpixel=img[end[0],end[1]]
+    for i in range(0,len(img)):
+        ligne=[]
+        for j in range(0,len(img[0])):
+            if [img[i,j][0],img[i,j][1],img[i,j][2]]==[greenpixel[0],greenpixel[1],greenpixel[2]]:
+                ligne.append([255,255,255])
+            elif [img[i,j][0],img[i,j][1],img[i,j][2]]==[redpixel[0],redpixel[1],redpixel[2]]:
+                ligne.append([255,255,255])
+            else: 
+                ligne.append([img[i,j,0],img[i,j,1],img[i,j,2]])
+        newimage.append(ligne)
+    return(newimage)            
+    
+    
+start,end = findStartEnd(img)  
+img=np.uint8(removeRedGreenPatches(img,start,end))
 
 def rgb2gray(rgb):
 
@@ -81,21 +116,23 @@ def invert(gray):
     for i in range (0,len(gray)):
         row=[]
         for j in range(0,len(gray[0])):
-            if 1-gray[i,j]>0.5:
+            if 1-gray[i,j]>0.7:
                 value=1
             else: 
                 value=0
             row.append(value)
         inverted.append(row)
     return(inverted)
-    
+#plt.imshow(numpy.array(invert(gray)))
 maze=numpy.array(invert(gray))
-start=(0,0)
-end=(len(maze)-1,len(maze[0])-1)
-listvisitedpoint=astar(maze, start, end)
+listvisitedpoint=astar(maze, start, (end[0],end[1]))
 print(listvisitedpoint)
 if listvisitedpoint != False: 
     for visitedpoint in listvisitedpoint: 
         img=numpy.array(img)
-        img[visitedpoint[0]][visitedpoint[1]]=[0,255,0]
+        img[visitedpoint[0]][visitedpoint[1]]=[0,0,255]
+        img[visitedpoint[0]+1][visitedpoint[1]]=[0,0,255]
+        img[visitedpoint[0]-1][visitedpoint[1]]=[0,0,255]
+        img[visitedpoint[0]][visitedpoint[1]+1]=[0,0,255]
+        img[visitedpoint[0]][visitedpoint[1]-1]=[0,0,255]
     plt.imshow(img)
